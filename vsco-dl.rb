@@ -56,13 +56,13 @@ def download(user, options)
   print "#{user}: Loading initial data"
 
   site = nil
-  if options[:site_id]
-    sites = JSON.load open "https://vsco.co/api/2.0/sites/#{user}", headers
+   if options[:site_id]
+    sites = JSON.load URI.open("https://vsco.co/api/2.0/sites/#{user}", headers)
     site = sites['site']
     # set user back to a username
     user = site['subdomain']
   else
-    sites = JSON.load open "https://vsco.co/api/2.0/sites?subdomain=#{user}", headers
+    sites = JSON.load URI.open("https://vsco.co/api/2.0/sites?subdomain=#{user}", headers)
     # the ol' return an array when you only queried for one thing
     site = sites['sites'][0]
   end
@@ -85,7 +85,7 @@ def download(user, options)
     url = options[:collection] ?
       "https://vsco.co/api/2.0/collections/#{site['site_collection_id']}/medias?page=#{page}&size=#{size}" :
       "https://vsco.co/api/2.0/medias?site_id=#{site['id']}&page=#{page}&size=#{size}"
-    response = JSON.load open url, headers
+    response = JSON.load URI.open(url, headers)
     key = options[:collection] ? 'medias' : 'media'
     images.concat response[key]
     break if response['total'] <= page * size
@@ -116,7 +116,7 @@ def download(user, options)
     image_url = r['is_video'] ? r['video_url'] : r['responsive_url']
     image_path = "#{file_path}#{File.extname image_url}"
     if options[:overwrite] or not File.exist? image_path
-      open "https://#{image_url}", headers do |f|
+      URI.open("https://#{image_url}", headers) do |f|
         File.open image_path, 'wb' do |file|
           file.write f.read
         end
